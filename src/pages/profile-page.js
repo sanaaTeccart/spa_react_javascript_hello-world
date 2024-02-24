@@ -1,14 +1,63 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import React from "react";
 import { CodeSnippet } from "../components/code-snippet";
 import { PageLayout } from "../components/page-layout";
 
-export const ProfilePage = () => {
-  const { user } = useAuth0();
+import React, { useEffect ,useState} from 'react';
 
-  if (!user) {
-    return null;
-  }
+export const ProfilePage = () => {
+  const { user , getAccessTokenSilently} = useAuth0();
+  const [userMetadata, setUserMetadata] = useState(null);
+  
+ 
+  useEffect(() => {
+    const getUserMetadata = async () => {
+      const domain ='dev-upl8zfh03myqa2je.us.auth0.com';
+  
+      try {
+        const accessToken = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: `https://${domain}/api/v2/`,
+            scope: "read:current_user",
+          },
+        });
+  
+        const userDetailsByIdUrl = `https://${domain}/api/v2/users/${user.sub}`;
+  
+        const metadataResponse = await fetch(userDetailsByIdUrl, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+  
+        const { user_metadata } = await metadataResponse.json();
+  
+        setUserMetadata(user_metadata);
+      } catch (e) {
+        console.log(e.message);
+      }
+    };
+  
+    getUserMetadata();
+  }, [getAccessTokenSilently, user?.sub]);
+
+
+  // async function callProtectedApi(){
+  //   try{
+  //      const accessToken = await getAccessTokenSilently({
+  //       audience:'http//django:8000/api'});
+    
+  //      console.log('Access Token:', accessToken);
+  //      const response=await axios.get('http://django:8000/api/v1/users',{
+  //        headers:{authorization:`Bearer ${accessToken}`}
+  //      })
+  //    console.log(response.data);
+  //    } catch (error) {
+  //      console.error('Error getting access token:', error);
+  //    }
+  //   };
+
+  
+
 
   return (
     <PageLayout>
@@ -39,10 +88,17 @@ export const ProfilePage = () => {
               </div>
             </div>
             <div className="profile__details">
-              <CodeSnippet
+              {/* <CodeSnippet
                 title="Decoded ID Token"
-                code={JSON.stringify(user, null, 2)}
-              />
+                 code={JSON.stringify(user, null, 2)}
+                
+              /> */}
+               {/* <button onClick={callProtectedApi}> Get Access Token</button> */}
+            
+
+            
+            
+            
             </div>
           </div>
         </div>
